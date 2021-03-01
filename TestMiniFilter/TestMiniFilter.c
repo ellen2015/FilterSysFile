@@ -115,14 +115,14 @@ TestMiniFilterDoRequestOperationStatus(
     );
 
 
-// ×Ô¼ºÐèÒªÊµÏÖµÄº¯Êý
-// ¿½±´ÐèÒª¹ýÂËµÄÎÄ¼þ£¨Çý¶¯ÎÄ¼þ£©
+// è‡ªå·±éœ€è¦å®žçŽ°çš„å‡½æ•°
+// æ‹·è´éœ€è¦è¿‡æ»¤çš„æ–‡ä»¶ï¼ˆé©±åŠ¨æ–‡ä»¶ï¼‰
 NTSTATUS
 FltCopyFile(
 	PCFLT_RELATED_OBJECTS FltObjects,
 	PFLT_FILE_NAME_INFORMATION NameInfo);
 
-// ¹ýÂËº¯Êý
+// è¿‡æ»¤å‡½æ•°
 FLT_PREOP_CALLBACK_STATUS
 SYSFilterPreSection(
 	PFLT_CALLBACK_DATA Data,
@@ -153,13 +153,13 @@ EXTERN_C_END
 
 CONST FLT_OPERATION_REGISTRATION Callbacks[] = {
 
-	// ¹ýÂË²¿·Ö
+	// è¿‡æ»¤éƒ¨åˆ†
 	{ IRP_MJ_ACQUIRE_FOR_SECTION_SYNCHRONIZATION,
 	  0,
 	  SYSFilterPreSection,
 	  NULL },
 
-	// ÆäËû¿ò¼Üº¯Êý£¬ÐèÒª¹ýÂËµÄ»°  ·ÅÔÚÍâÃæ¼´¿É
+	// å…¶ä»–æ¡†æž¶å‡½æ•°ï¼Œéœ€è¦è¿‡æ»¤çš„è¯  æ”¾åœ¨å¤–é¢å³å¯
 #if 0 // TODO - List all of the requests to filter.
     { IRP_MJ_CREATE,
       0,
@@ -728,26 +728,26 @@ SYSFilterPreSection(
 		return FLT_PREOP_SUCCESS_NO_CALLBACK;
 	}
 
-	// ¹ýÂË¿½±´¼ÓÔØµÄÇý¶¯ÎÄ¼þ
+	// è¿‡æ»¤æ‹·è´åŠ è½½çš„é©±åŠ¨æ–‡ä»¶
 	if (Data->Iopb->Parameters.AcquireForSectionSynchronization.PageProtection == PAGE_EXECUTE)
 	{
 		if ((HANDLE)4 == PsGetCurrentProcessId())
 		{
-			// »ñÈ¡¹ýÂË¶ÔÏóµÄÃû×ÖÐÅÏ¢
+			// èŽ·å–è¿‡æ»¤å¯¹è±¡çš„åå­—ä¿¡æ¯
 			status = FltGetFileNameInformation(Data, FLT_FILE_NAME_NORMALIZED | FLT_FILE_NAME_QUERY_DEFAULT, &fileNameInformation);
 			if (!NT_SUCCESS(status))
 			{
 				return FLT_PREOP_SUCCESS_NO_CALLBACK;
 			}
 
-			// ½âÎö
+			// è§£æž
 			status = FltParseFileNameInformation(fileNameInformation);
 			if (!NT_SUCCESS(status))
 			{
 				return FLT_PREOP_SUCCESS_NO_CALLBACK;
 			}
 
-			// ¸É»îÁË¡£¡£¡£
+			// å¹²æ´»äº†ã€‚ã€‚ã€‚
 			status = FltCopyFile(FltObjects, fileNameInformation);
 
 			FltReleaseFileNameInformation(fileNameInformation);
@@ -882,9 +882,9 @@ FltCopyFile(
 
 
 	ULONG uLength = 0;
-	// ÎÄ¼þ±ê×¼ÐÅÏ¢
+	// æ–‡ä»¶æ ‡å‡†ä¿¡æ¯
 	FILE_STANDARD_INFORMATION fileStandardInformation = { 0 };
-	// »ñÈ¡¹ýÂËÎÄ¼þµÄ»ù±¾ÐÅÏ¢
+	// èŽ·å–è¿‡æ»¤æ–‡ä»¶çš„åŸºæœ¬ä¿¡æ¯
 	status = FltQueryInformationFile(FltObjects->Instance,
 		FltObjects->FileObject,
 		&fileStandardInformation,
@@ -896,9 +896,9 @@ FltCopyFile(
 	{
 		return status;
 	}
-	// »ñÈ¡ÎÄ¼þµÄ³¤¶È
+	// èŽ·å–æ–‡ä»¶çš„é•¿åº¦
 	uLength = fileStandardInformation.AllocationSize.LowPart;
-	// ÉêÇëÎÄ¼þ´óÐ¡µÄÄÚ´æ£¬ÓÃÓÚ±£´æÎÄ¼þÊý¾Ý
+	// ç”³è¯·æ–‡ä»¶å¤§å°çš„å†…å­˜ï¼Œç”¨äºŽä¿å­˜æ–‡ä»¶æ•°æ®
 	pBuffer = FltAllocatePoolAlignedWithTag(FltObjects->Instance, NonPagedPoolCacheAligned, uLength, COPY_FILE_ALLOC_TAG);
 	if (!pBuffer)
 	{
@@ -907,7 +907,7 @@ FltCopyFile(
 
 	offset.QuadPart = uBytes = 0;
 
-	// ¶ÁÈ¡¹ýÂËÎÄ¼þµÄÊý¾Ý
+	// è¯»å–è¿‡æ»¤æ–‡ä»¶çš„æ•°æ®
 	status = FltReadFile(FltObjects->Instance,
 		FltObjects->FileObject,
 		&offset,
@@ -920,16 +920,16 @@ FltCopyFile(
 
 	if (NT_SUCCESS(status) && (uBytes == fileStandardInformation.EndOfFile.LowPart))
 	{
-		// Æ´½ÓÒ»¸öcopyµÄÎÄ¼þÂ·¾¶Ãû
+		// æ‹¼æŽ¥ä¸€ä¸ªcopyçš„æ–‡ä»¶è·¯å¾„å
 		
 		WCHAR buffer[MAX_PATH] = { 0 };
 		UNICODE_STRING ustrFileName = { 0 };
 		RtlInitEmptyUnicodeString(&ustrFileName, buffer, MAX_PATH);
-		// ±£´æÔÚÃ¿¸ö¾íµÄ¸ùÄ¿Â¼ÏÂ
+		// ä¿å­˜åœ¨æ¯ä¸ªå·çš„æ ¹ç›®å½•ä¸‹
 		RtlCopyUnicodeString(&ustrFileName, &NameInfo->Volume);
-		// ÉèÖÃ¿½±´ÎÄ¼þµÄÇ°×º
+		// è®¾ç½®æ‹·è´æ–‡ä»¶çš„å‰ç¼€
 		RtlUnicodeStringCatString(&ustrFileName, L"\\CopyFile_");
-		// ×îÖÕ¿½±´µÄÎÄ¼þÃû³Æ
+		// æœ€ç»ˆæ‹·è´çš„æ–‡ä»¶åç§°
 		RtlUnicodeStringCat(&ustrFileName, &NameInfo->FinalComponent);
 
 		if (NameInfo->Stream.Length &&
@@ -949,7 +949,7 @@ FltCopyFile(
 		PFILE_OBJECT pFileObject = NULL;
 		InitializeObjectAttributes(&oa, &ustrFileName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
 
-		// ´´½¨Ò»¸öcopyÎÄ¼þ
+		// åˆ›å»ºä¸€ä¸ªcopyæ–‡ä»¶
 		status = FltCreateFile(FltObjects->Filter,
 			FltObjects->Instance,
 			&hFile,
@@ -973,7 +973,7 @@ FltCopyFile(
 			return status;
 		}
 
-		// »ñÈ¡ÎÄ¼þ¶ÔÏó
+		// èŽ·å–æ–‡ä»¶å¯¹è±¡
 		status = ObReferenceObjectByHandle(hFile, FILE_ALL_ACCESS, NULL, KernelMode, (PVOID*)&pFileObject, NULL);
 		if (!NT_SUCCESS(status))
 		{		
@@ -988,7 +988,7 @@ FltCopyFile(
 
 		ULONG uWriteBytes = 0;
 		LARGE_INTEGER writeOffset = { 0 };
-		// Ð´ÎÄ¼þ
+		// å†™æ–‡ä»¶
 		status = FltWriteFile(FltObjects->Instance,
 			pFileObject,
 			&writeOffset,
@@ -1008,7 +1008,7 @@ FltCopyFile(
 				&fileDispositionInformation,
 				sizeof(FILE_DISPOSITION_INFORMATION),
 				FileDispositionInformation);
-			ObDereferenceObject(pFileObject);
+			
 			FltClose(hFile);
 			ObDereferenceObject(pFileObject);
 			status = STATUS_UNSUCCESSFUL;
@@ -1018,7 +1018,7 @@ FltCopyFile(
 		ObDereferenceObject(pFileObject);
 	}
 
-	// ÊÍ·ÅÉêÇëµÄÄÚ´æ¿Õ¼ä
+	// é‡Šæ”¾ç”³è¯·çš„å†…å­˜ç©ºé—´
 	if (pBuffer)
 	{
 		FltFreePoolAlignedWithTag(FltObjects->Instance, pBuffer, COPY_FILE_ALLOC_TAG);
